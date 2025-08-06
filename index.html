@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NovaSeek</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Roboto&display=swap" rel="stylesheet" />
+  <style>
+    /* Reset and base */
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0; padding: 24px 16px;
+      font-family: 'Roboto', sans-serif;
+      background: #0a0a1a;
+      color: #eee;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background-size: cover;
+      background-position: center;
+      transition: background 0.6s ease;
+    }
+    header {
+      width: 100%; max-width: 960px;
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 24px;
+      position: relative;
+    }
+    .logo {
+      font-family: 'Orbitron', sans-serif;
+      font-weight: 700;
+      font-size: 2.8rem;
+      background: linear-gradient(90deg, #a178ff, #70c3ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      user-select: none;
+      letter-spacing: 0.08em;
+    }
+
+    /* Auth Button */
+    #authButton {
+      width: 48px; height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #7050ff, #512ecc);
+      border: none;
+      cursor: pointer;
+      display: flex; justify-content: center; align-items: center;
+      box-shadow: 0 0 8px #7050ffaa;
+      transition: background 0.3s;
+      user-select: none;
+    }
+    #authButton:hover {
+      background: linear-gradient(135deg, #512ecc, #7050ff);
+      box-shadow: 0 0 12px #7050ffdd;
+    }
+    #authButton img {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      object-fit: cover;
+    }
+
+    /* Auth Popup */
+    #authPopup {
+      position: absolute;
+      top: 60px; right: 0;
+      background: rgba(18, 18, 38, 0.95);
+      border-radius: 14px;
+      padding: 24px 28px;
+      width: 320px;
+      box-shadow: 0 8px 24px rgba(50,50,90,0.8);
+      display: none;
+      flex-direction: column;
+      gap: 16px;
+      z-index: 1100;
+      color: #ddd;
+      font-size: 0.95rem;
+      user-select: none;
+    }
+    #authPopup.active {
+      display: flex;
+      animation: fadeInScale 0.3s ease forwards;
+    }
+    @keyframes fadeInScale {
+      0% {opacity: 0; transform: scale(0.85);}
+      100% {opacity: 1; transform: scale(1);}
+    }
+    #authPopup input, #authPopup button {
+      font-size: 1rem;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: none;
+      outline: none;
+      width: 100%;
+      background: #1c1c40;
+      color: #eee;
+      box-shadow: inset 0 0 6px #7050ff66;
+      transition: box-shadow 0.3s;
+    }
+    #authPopup input:focus {
+      box-shadow: inset 0 0 8px #a178ffcc;
+    }
+    #authPopup button {
+      background: linear-gradient(135deg, #7050ff, #512ecc);
+      cursor: pointer;
+      font-weight: 700;
+      box-shadow: 0 0 10px #7050ffcc;
+      transition: background 0.3s, box-shadow 0.3s;
+      user-select: none;
+    }
+    #authPopup button:hover {
+      background: linear-gradient(135deg, #512ecc, #7050ff);
+      box-shadow: 0 0 14px #7050ffee;
+    }
+    #authPopup .switch-mode {
+      background: transparent;
+      color: #a0a0c7;
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-align: center;
+      cursor: pointer;
+      margin-top: 6px;
+      user-select: none;
+      letter-spacing: 0.02em;
+      transition: color 0.3s;
+    }
+    #authPopup .switch-mode:hover {
+      color: #d1d1ff;
+      text-decoration: underline;
+    }
+    #authPopup small {
+      color: #8888aa;
+      font-size: 0.82rem;
+      text-align: center;
+      user-select: none;
+    }
+
+    /* Search Box */
+    .search-box {
+      width: 100%;
+      max-width: 960px;
+      display: flex;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .search-box input[type="text"] {
+      flex: 1;
+      padding: 14px 18px;
+      border-radius: 14px;
+      border: none;
+      font-size: 1.15rem;
+      outline: none;
+      background: #1c1c40;
+      color: #eee;
+      box-shadow: inset 0 0 8px #7050ff99;
+      transition: box-shadow 0.3s;
+    }
+    .search-box input[type="text"]:focus {
+      box-shadow: inset 0 0 12px #a178ffcc;
+    }
+    /* 改成圓形按鈕 */
+    .search-box button {
+      background: linear-gradient(135deg, #7050ff, #512ecc);
+      border: none;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+      font-size: 1.3rem;
+      box-shadow: 0 0 12px #7050ffcc;
+      transition: background 0.3s, box-shadow 0.3s;
+      display: flex; align-items: center; justify-content: center;
+      user-select: none;
+    }
+    .search-box button:hover {
+      background: linear-gradient(135deg, #512ecc, #7050ff);
+      box-shadow: 0 0 16px #7050ffee;
+    }
+    .search-box button:active {
+      transform: scale(0.95);
+      transition: transform 0.1s;
+    }
+
+    /* Results Grid */
+    #results {
+      width: 100%;
+      max-width: 960px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit,minmax(240px,1fr));
+      gap: 20px;
+    }
+    .item {
+      background: rgba(112, 80, 255, 0.12);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 0 14px #7050ff88;
+      transition: transform 0.3s, box-shadow 0.3s;
+      cursor: default;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+    .item:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 8px 24px #a178ffcc;
+    }
+    .item img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      background: #333;
+      filter: drop-shadow(0 0 2px #7050ffaa);
+      transition: filter 0.3s;
+    }
+    .item-content {
+      padding: 12px 16px 16px 16px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      color: #ddd;
+    }
+    .item-content h3 {
+      margin: 0;
+      font-weight: 700;
+      font-size: 1.2rem;
+      letter-spacing: 0.04em;
+      user-select: text;
+    }
+    .item-content p {
+      margin: 0;
+      font-size: 0.95rem;
+      line-height: 1.3;
+      color: #bbb;
+      user-select: text;
+    }
+    .item-content small {
+      color: #aaa;
+      font-size: 0.82rem;
+      font-style: italic;
+      margin-top: auto;
+      user-select: text;
+    }
+
+    /* Background toggle button */
+    .background-toggle {
+      margin-top: 36px;
+      background: linear-gradient(135deg, #7050ff, #512ecc);
+      border: none;
+      padding: 14px 26px;
+      border-radius: 24px;
+      color: white;
+      font-weight: 700;
+      font-size: 1.1rem;
+      cursor: pointer;
+      box-shadow: 0 0 14px #7050ffcc;
+      transition: background 0.3s, box-shadow 0.3s;
+      user-select: none;
+      max-width: 960px;
+      width: 100%;
+      max-width: 240px;
+    }
+    .background-toggle:hover {
+      background: linear-gradient(135deg, #512ecc, #7050ff);
+      box-shadow: 0 0 20px #7050ffee;
+    }
+    .background-toggle:active {
+      transform: scale(0.95);
+      transition: transform 0.1s;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+      }
+      .search-box {
+        flex-direction: column;
+      }
+      .search-box button {
+        width: 48px;
+        height: 48px;
+      }
+      #authPopup {
+        right: auto;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90vw;
+        max-width: 320px;
+        padding: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo">NovaSeek</div>
+    <button id="authButton" title="登入/註冊">登入</button>
+    <div id="authPopup" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="authTitle"></div>
+  </header>
+
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="輸入關鍵字..." autocomplete="off" />
+    <button id="searchBtn" title="搜尋">🔍</button>
+    <button id="voiceBtn" title="語音搜尋">🎤</button>
+  </div>
+
+  <div id="results"></div>
+
+  <button class="background-toggle" title="切換背景">切換背景</button>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-app.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      sendPasswordResetEmail,
+      signOut,
+      updateProfile
+    } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      getDocs,
+      addDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.3.0/firebase-firestore.js";
+
+    // Firebase config
+    const firebaseConfig = {
+      apiKey: "AIzaSyA7K4x1Di_xUaVt7MF08LfumJxc10dqa3c",
+      authDomain: "sample-firebase-ai-app-df21b.firebaseapp.com",
+      projectId: "sample-firebase-ai-app-df21b",
+      storageBucket: "sample-firebase-ai-app-df21b.firebasestorage.app",
+      messagingSenderId: "762970139210",
+      appId: "1:762970139210:web:149e9ab5e9593a484cd4b3"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const authButton = document.getElementById('authButton');
+    const authPopup = document.getElementById('authPopup');
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const voiceBtn = document.getElementById('voiceBtn');
+    const resultsDiv = document.getElementById('results');
+
+    let isPopupOpen = false;
+    let isLoginMode = true;
+
+    // Auth button toggle popup
+    authButton.addEventListener('click', e => {
+      e.stopPropagation();
+      if (isPopupOpen) closeAuthPopup();
+      else openAuthPopup();
+    });
+    document.addEventListener('click', () => {
+      if (isPopupOpen) closeAuthPopup();
+    });
+    authPopup.addEventListener('click', e => e.stopPropagation());
+
+    function openAuthPopup() {
+      isPopupOpen = true;
+      authPopup.classList.add('active');
+      renderAuthForm();
+      authPopup.focus();
+    }
+    function closeAuthPopup() {
+      isPopupOpen = false;
+      authPopup.classList.remove('active');
+    }
+
+    function updateAuthButton(user) {
+      if (user) {
+        if (user.photoURL) {
+          authButton.innerHTML = `<img src="${user.photoURL}" alt="User photo" />`;
+        } else if (user.displayName) {
+          authButton.textContent = user.displayName[0].toUpperCase();
+        } else if (user.email) {
+          authButton.textContent = user.email[0].toUpperCase();
+        } else {
+          authButton.textContent = "U";
+        }
+        authButton.title = "點擊查看帳號選項";
+      } else {
+        authButton.textContent = "登入";
+        authButton.title = "點擊登入或註冊";
+      }
+    }
+
+    function renderAuthForm() {
+      if (auth.currentUser) {
+        authPopup.innerHTML = `
+          <div><strong id="authTitle">使用者資訊</strong></div>
+          <div style="margin: 16px 0; font-weight: 600; font-size: 1.1rem; text-align:center;">
+            歡迎，${auth.currentUser.displayName || auth.currentUser.email}
+          </div>
+          <button id="logoutBtn">登出</button>
+        `;
+        document.getElementById('logoutBtn').addEventListener('click', logout);
+      } else if (isLoginMode) {
+        authPopup.innerHTML = `
+          <div><strong id="authTitle">登入 NovaSeek</strong></div>
+          <input type="email" id="email" placeholder="Email" autocomplete="username" />
+          <input type="password" id="password" placeholder="密碼" autocomplete="current-password" />
+          <button id="loginBtn">登入</button>
+          <div class="switch-mode" id="switchToRegister">還沒有帳號？註冊</div>
+          <div class="switch-mode" id="forgotPassword">忘記密碼？</div>
+          <small>使用 Firebase Email/Password 登入</small>
+        `;
+        document.getElementById('loginBtn').addEventListener('click', login);
+        document.getElementById('switchToRegister').addEventListener('click', () => switchMode(false));
+        document.getElementById('forgotPassword').addEventListener('click', showForgotPasswordForm);
+      } else {
+        authPopup.innerHTML = `
+          <div><strong id="authTitle">註冊 NovaSeek</strong></div>
+          <input type="text" id="name" placeholder="姓名" autocomplete="name" />
+          <input type="email" id="email" placeholder="Email" autocomplete="email" />
+          <input type="password" id="password" placeholder="密碼 (至少6字元)" autocomplete="new-password" />
+          <button id="registerBtn">註冊</button>
+          <div class="switch-mode" id="switchToLogin">已有帳號？登入</div>
+          <small>使用 Firebase Email/Password 註冊</small>
+        `;
+        document.getElementById('registerBtn').addEventListener('click', register);
+        document.getElementById('switchToLogin').addEventListener('click', () => switchMode(true));
+      }
+    }
+
+    // 忘記密碼表單
+    function showForgotPasswordForm() {
+      authPopup.innerHTML = `
+        <div><strong id="authTitle">忘記密碼</strong></div>
+        <input type="email" id="resetEmail" placeholder="請輸入註冊的 Email" autocomplete="email" />
+        <button id="resetBtn">寄送重設密碼信</button>
+        <div class="switch-mode" id="backToLogin">回到登入</div>
+        <small>請確認輸入正確的 Email，系統將寄送密碼重設信件。</small>
+      `;
+      document.getElementById('resetBtn').addEventListener('click', resetPassword);
+      document.getElementById('backToLogin').addEventListener('click', () => switchMode(true));
+    }
+
+    // Switch login/register
+    function switchMode(toLogin) {
+      isLoginMode = toLogin;
+      renderAuthForm();
+    }
+
+    // Register function
+    async function register() {
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      if (!name || !email || password.length < 6) {
+        alert('請完整填寫姓名、Email，且密碼至少6字元');
+        return;
+      }
+
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        await updateProfile(userCredential.user, { displayName: name });
+        alert('註冊成功，已登入');
+        closeAuthPopup();
+      } catch (error) {
+        alert('註冊錯誤: ' + error.message);
+      }
+    }
+
+    // Login function
+    async function login() {
+      const email = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+
+      if (!email || !password) {
+        alert('請輸入 Email 和密碼');
+        return;
+      }
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        alert('登入成功');
+        closeAuthPopup();
+      } catch (error) {
+        alert('登入錯誤: ' + error.message);
+      }
+    }
+
+    // Logout function
+    async function logout() {
+      await signOut(auth);
+      alert('已登出');
+      closeAuthPopup();
+    }
+
+    // Reset password
+    async function resetPassword() {
+      const email = document.getElementById('resetEmail').value.trim();
+      if (!email) {
+        alert('請輸入 Email');
+        return;
+      }
+      try {
+        await sendPasswordResetEmail(auth, email);
+        alert('重設密碼信已寄出');
+        switchMode(true);
+      } catch (error) {
+        alert('錯誤: ' + error.message);
+      }
+    }
+
+    // 監聽登入狀態變化
+    onAuthStateChanged(auth, user => {
+      updateAuthButton(user);
+    });
+
+    // 搜尋功能 (示範：讀 Firestore items 集合並根據關鍵字過濾)
+    async function performSearch(keyword) {
+      resultsDiv.innerHTML = `<p>搜尋中...</p>`;
+      if (!keyword.trim()) {
+        resultsDiv.innerHTML = `<p>請輸入關鍵字</p>`;
+        return;
+      }
+      try {
+        const itemsCol = collection(db, "items");
+        const snapshot = await getDocs(itemsCol);
+        const results = [];
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          if (data.title?.toLowerCase().includes(keyword.toLowerCase())) {
+            results.push(data);
+          }
+        });
+        if (results.length === 0) {
+          resultsDiv.innerHTML = `<p>找不到相關項目</p>`;
+          return;
+        }
+        resultsDiv.innerHTML = results.map(item => `
+          <div class="item">
+            <img src="${item.imageUrl || ''}" alt="${item.title || ''}" />
+            <div class="item-content">
+              <h3>${item.title || ''}</h3>
+              <p>${item.description || ''}</p>
+              <small>${item.date || ''}</small>
+            </div>
+          </div>
+        `).join('');
+      } catch (error) {
+        resultsDiv.innerHTML = `<p>搜尋錯誤: ${error.message}</p>`;
+      }
+    }
+
+    // 按鈕綁定
+    searchBtn.addEventListener('click', () => performSearch(searchInput.value));
+    searchInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') performSearch(searchInput.value);
+    });
+
+    // 語音搜尋示範（Web Speech API）
+    voiceBtn.addEventListener('click', () => {
+      if (!('webkitSpeechRecognition' in window)) {
+        alert('您的瀏覽器不支援語音辨識');
+        return;
+      }
+      const recognition = new webkitSpeechRecognition();
+      recognition.lang = 'zh-TW';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onresult = function(event) {
+        const spoken = event.results[0][0].transcript;
+        searchInput.value = spoken;
+        performSearch(spoken);
+      };
+      recognition.onerror = function(event) {
+        alert('語音辨識錯誤: ' + event.error);
+      };
+      recognition.start();
+    });
+
+    // 背景切換
+    const backgrounds = [
+
+      'url(https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1280&q=80)',
+      'url(https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1280&q=80)',
+      'url(https://file.51pptmoban.com/d/file/2022/10/07/b8e730e2dbe9a231761b6e956be6bce6.jpg)',
+      'url(https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1280&q=80)',
+      'url(https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1280&q=80)'
+    ];
+    let bgIndex = 0;
+    document.querySelector('.background-toggle').addEventListener('click', () => {
+      bgIndex = (bgIndex + 1) % backgrounds.length;
+      document.body.style.backgroundImage = backgrounds[bgIndex];
+    });
+    // 預設背景
+    document.body.style.backgroundImage = backgrounds[bgIndex];
+  </script>
+</body>
+</html>
