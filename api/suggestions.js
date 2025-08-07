@@ -24,11 +24,10 @@ export default async function handler(req, res) {
   const data = await response.json();
   const text = data.choices?.[0]?.message?.content || '';
 
-  // 將回傳的內容以換行切成陣列
   const suggestions = text
     .split('\n')
-    .map(line => line.replace(/^\d+[\.\s-]*/, '').trim()) // 去除前面的數字或符號
-    .filter(Boolean); // 移除空白行
+    .map(line => line.replace(/^\d+[\.\s-]*/, '').trim())
+    .filter(Boolean);
 
   res.status(200).json({ suggestions });
 }
