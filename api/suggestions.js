@@ -30,19 +30,11 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    if (!Array.isArray(data) || !data[0]?.generated_text) {
-      return res.status(500).json({ error: 'Invalid Hugging Face response', raw: data });
-    }
+    console.log('Hugging Face API response:', data);  // 加這行
 
-    // 解析生成文字，拆成建議列表
-    const generated = data[0].generated_text;
-    const suggestions = generated
-      .split(/[\n,;.]+/)
-      .map(s => s.trim())
-      .filter(s => s.length > 0)
-      .slice(0, 5);  // 最多5個建議
+    // 先把回應直接丟給前端看
+    res.status(200).json({ raw: data });
 
-    res.status(200).json({ suggestions });
   } catch (error) {
     console.error('Hugging Face API call error:', error);
     res.status(500).json({ error: 'Hugging Face API call failed' });
