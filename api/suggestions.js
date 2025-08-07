@@ -29,7 +29,6 @@ export default async function handler(req, res) {
     });
 
     if (!response.ok) {
-      // 伺服器回傳錯誤，擷取錯誤訊息
       const errData = await response.json().catch(() => null);
       console.error('Hugging Face API error response:', errData || response.statusText);
       return res.status(response.status).json({ error: 'Hugging Face API error', details: errData });
@@ -37,11 +36,11 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    if (!Array.isArray(data) || !data[0]?.generated_text) {
+    if (!data?.generated_text) {
       return res.status(500).json({ error: 'Invalid Hugging Face response format', raw: data });
     }
 
-    const generated = data[0].generated_text;
+    const generated = data.generated_text;
     const suggestions = generated
       .split(/[\n,;.]+/)
       .map(s => s.trim())
