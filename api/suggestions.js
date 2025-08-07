@@ -1,4 +1,4 @@
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   const { q } = req.query;
   const apiKey = process.env.HUGGINGFACE_API_KEY;
 
@@ -11,22 +11,7 @@ export default async function handler(req, res) {
   }
 
   try {
-        const response = await fetch("https://api-inference.huggingface.co/models/distilgpt2", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        inputs: `Search suggestions for: ${q}`,
-        parameters: {
-          max_new_tokens: 50,
-          temperature: 0.7,
-          top_p: 0.9,
-          return_full_text: false,
-        }
-      }),
-    });
+    const response = await fetch("https://api-inference.huggingface.co/models/distilgpt2", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -64,7 +49,7 @@ export default async function handler(req, res) {
 
     res.status(200).json({ suggestions });
   } catch (error) {
-    console.error('Hugging Face API call exception:', error);
+    console.error('Hugging Face API call exception:', error.stack || error);
     res.status(500).json({ error: 'Hugging Face API call failed', details: error.message || error.toString() });
   }
-}
+};
