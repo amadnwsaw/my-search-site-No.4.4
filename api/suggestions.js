@@ -1,25 +1,32 @@
 export default async function handler(req, res) {
   const { keyword } = req.body;
+  const apiKey = process.env.OPENAI_API_KEY;
 
-  const prompt = `請根據「${keyword}」這個搜尋字詞，推薦 5 個相關搜尋關鍵字，用逗號分隔輸出。`;
+  if (!apiKey) {
+    return res.status(500).json({ error: 'Missing API key' });
+  }
+
+  const prompt = `請根據「${keyword}」提供 5 個延伸搜尋建議，格式為 JSON 陣列，例如：["建議1", "建議2", "建議3"]`;
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
       model: 'gpt-3.5-turbo',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0.7
-    })
+      temperature: 0.7,
+    }),
   });
 
-  const result = await response.json();
-  const text = result.choices?.[0]?.message?.content || '';
-  const suggestions = text.split(/[,\n]+/).map(s => s.trim()).filter(Boolean);
+  const data = await response.json();
 
-  res.status(200).json({ suggestions });
+  try {
+    const suggestions = JSON.parse(data.choices[0].message.content);
+    res.status(200).json({ suggestions });
+  } catch (e) {
+    res.status(200).json({ suggestions: [] });
+  }
 }
-
