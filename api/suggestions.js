@@ -28,15 +28,29 @@ export default async function handler(req, res) {
       }),
     });
 
+    if (!response.ok) {
+      // 伺服器回傳錯誤，擷取錯誤訊息
+      const errData = await response.json().catch(() => null);
+      console.error('Hugging Face API error response:', errData || response.statusText);
+      return res.status(response.status).json({ error: 'Hugging Face API error', details: errData });
+    }
+
     const data = await response.json();
 
-    console.log('Hugging Face API response:', data);  // 加這行
+    if (!Array.isArray(data) || !data[0]?.generated_text) {
+      return res.status(500).json({ error: 'Invalid Hugging Face response format', raw: data });
+    }
 
-    // 先把回應直接丟給前端看
-    res.status(200).json({ raw: data });
+    const generated = data[0].generated_text;
+    const suggestions = generated
+      .split(/[\n,;.]+/)
+      .map(s => s.trim())
+      .filter(s => s.length > 0)
+      .slice(0, 5);
 
+    res.status(200).json({ suggestions });
   } catch (error) {
-    console.error('Hugging Face API call error:', error);
-    res.status(500).json({ error: 'Hugging Face API call failed' });
+    console.error('Hugging Face API call exception:', error);
+    res.status(500).json({ error: 'Hugging Face API call failed', details: error.message || error.toString() });
   }
 }
