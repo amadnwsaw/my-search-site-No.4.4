@@ -1,48 +1,42 @@
 export default async function handler(req, res) {
-  const { keyword } = req.body;
-  const apiKey = process.env.OPENAI_API_KEY;
+  const { q } = req.query;
+  const API_KEY = process.env.HUGGINGFACE_API_KEY;
 
-  if (!apiKey) {
-    return res.status(500).json({ error: 'Missing OpenAI API key' });
-  }
-  if (!keyword || keyword.trim().length === 0) {
-    return res.status(400).json({ error: 'Keyword is required' });
+  if (!API_KEY) {
+    return res.status(500).json({ error: "Missing Hugging Face API key" });
   }
 
-  const prompt = `請幫我列出5個與「${keyword}」相關的繁體中文搜尋建議，每個建議詞一行，請只回覆建議詞，不要其他文字。`;
+  if (!q) {
+    return res.status(400).json({ error: "Missing query input" });
+  }
 
   try {
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
+    const response = await fetch("https://api-inference.huggingface.co/models/gpt2", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
+        Authorization: `Bearer ${API_KEY}`,
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.7,
-      }),
+      body: JSON.stringify({ inputs: `Search: ${q}` }),
     });
 
     const data = await response.json();
 
-    console.log('OpenAI 回傳:', data);
-
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      return res.status(500).json({ error: 'OpenAI response invalid', raw: data });
+    if (!data || !Array.isArray(data) || !data[0]?.generated_text) {
+      return res.status(500).json({ error: "Invalid Hugging Face response" });
     }
 
-    const text = data.choices[0].message.content;
+    // 簡單拆出建議詞
+    const generated = data[0].generated_text;
+    const suggestions = generated
+      .replace(`Search: ${q}`, "")
+      .split(/[.,;!?]/)
+      .map(s => s.trim())
+      .filter(s => s.length > 0)
+      .slice(0, 5); // 最多給 5 個建議
 
-    const suggestions = text
-      .split('\n')
-      .map(line => line.replace(/^\d+[\.\-]?\s*/, '').trim())
-      .filter(Boolean);
-
-    res.status(200).json({ suggestions });
+    return res.status(200).json({ suggestions });
   } catch (error) {
-    console.error('OpenAI 請求失敗:', error);
-    res.status(500).json({ error: 'OpenAI request failed' });
+    return res.status(500).json({ error: "Hugging Face API call failed" });
   }
 }
