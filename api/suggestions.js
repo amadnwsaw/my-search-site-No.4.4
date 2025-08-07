@@ -1,4 +1,6 @@
-module.exports = async function handler(req, res) {
+// pages/api/suggestions.js
+
+export default async function handler(req, res) {
   const { q } = req.query;
   const apiKey = process.env.HUGGINGFACE_API_KEY;
 
@@ -11,7 +13,7 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const response = await fetch("https://api-inference.huggingface.co/models/distilgpt2", {
+    const response = await fetch("https://api-inference.huggingface.co/models/gpt2", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -23,7 +25,7 @@ module.exports = async function handler(req, res) {
           max_new_tokens: 50,
           temperature: 0.7,
           top_p: 0.9,
-          return_full_text: false,
+          return_full_text: true
         }
       }),
     });
@@ -36,20 +38,16 @@ module.exports = async function handler(req, res) {
 
     const data = await response.json();
 
-    if (!data?.generated_text) {
-      return res.status(500).json({ error: 'Invalid Hugging Face response format', raw: data });
-    }
-
-    const generated = data.generated_text;
+    const generated = data[0]?.generated_text || "";
     const suggestions = generated
       .split(/[\n,;.]+/)
       .map(s => s.trim())
-      .filter(s => s.length > 0)
+      .filter(s => s.length > 0 && !s.toLowerCase().includes("search suggestions"))
       .slice(0, 5);
 
-    res.status(200).json({ suggestions });
-  } catch (error) {
-    console.error('Hugging Face API call exception:', error.stack || error);
-    res.status(500).json({ error: 'Hugging Face API call failed', details: error.message || error.toString() });
+    return res.status(200).json({ suggestions });
+  } catch (err) {
+    console.error('Hugging Face API call exception:', err);
+    return res.status(500).json({ error: 'Hugging Face API call failed', details: err.message || err.toString() });
   }
-};
+}
