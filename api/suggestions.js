@@ -6,7 +6,7 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Missing API key' });
   }
 
-  const prompt = `請根據「${keyword}」提供 5 個延伸搜尋建議，格式為 JSON 陣列，例如：["建議1", "建議2", "建議3"]`;
+  const prompt = `根據「${keyword}」，請提供 5 個延伸搜尋建議，每個建議以換行分隔`;
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
@@ -22,11 +22,13 @@ export default async function handler(req, res) {
   });
 
   const data = await response.json();
+  const text = data.choices?.[0]?.message?.content || '';
 
-  try {
-    const suggestions = JSON.parse(data.choices[0].message.content);
-    res.status(200).json({ suggestions });
-  } catch (e) {
-    res.status(200).json({ suggestions: [] });
-  }
+  // 將回傳的內容以換行切成陣列
+  const suggestions = text
+    .split('\n')
+    .map(line => line.replace(/^\d+[\.\s-]*/, '').trim()) // 去除前面的數字或符號
+    .filter(Boolean); // 移除空白行
+
+  res.status(200).json({ suggestions });
 }
