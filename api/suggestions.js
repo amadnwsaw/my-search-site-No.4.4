@@ -5,8 +5,11 @@ export default async function handler(req, res) {
   if (!apiKey) {
     return res.status(500).json({ error: 'Missing OpenAI API key' });
   }
+  if (!keyword || keyword.trim().length === 0) {
+    return res.status(400).json({ error: 'Keyword is required' });
+  }
 
-  const prompt = `根據「${keyword}」，請提供 5 個延伸搜尋建議，每個建議用換行分隔`;
+  const prompt = `請根據關鍵字「${keyword}」，用繁體中文列出5個與此關鍵字相關的搜尋建議，格式用換行分隔，每一行只寫建議詞。`;
 
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
