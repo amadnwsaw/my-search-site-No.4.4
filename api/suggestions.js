@@ -11,7 +11,22 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch("https://api-inference.huggingface.co/models/gpt2", {
+        const response = await fetch("https://api-inference.huggingface.co/models/distilgpt2", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        inputs: `Search suggestions for: ${q}`,
+        parameters: {
+          max_new_tokens: 50,
+          temperature: 0.7,
+          top_p: 0.9,
+          return_full_text: false,
+        }
+      }),
+    });
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
