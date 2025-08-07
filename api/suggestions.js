@@ -11,40 +11,44 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=' + apiKey, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              {
-                text: `請幫我針對「${q}」提供 5 個搜尋建議關鍵字，用逗號分隔：`
-              }
-            ]
-          }
-        ]
-      })
-    });
+    const response = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=' + apiKey,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: `請根據 "${q}" 提供 5 個相關的搜尋建議，用逗號分隔。`
+                }
+              ]
+            }
+          ]
+        })
+      }
+    );
 
     const data = await response.json();
 
-    const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) {
+    if (!data || !data.candidates || !data.candidates[0]?.content?.parts[0]?.text) {
       return res.status(500).json({ error: 'Invalid Gemini response', raw: data });
     }
 
+    const text = data.candidates[0].content.parts[0].text;
+
     const suggestions = text
-      .split(/[,，\n]+/)
-      .map(s => s.trim())
-      .filter(Boolean)
+      .split(/[\n,;.]+/)
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0)
       .slice(0, 5);
 
     res.status(200).json({ suggestions });
   } catch (error) {
     console.error('Gemini API call failed:', error);
-    res.status(500).json({ error: 'Gemini API call failed', details: error.message });
+    res.status(500).json({ error: 'Gemini API call failed', details: error.message || error.toString() });
   }
 }
