@@ -9,7 +9,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Keyword is required' });
   }
 
-  const prompt = `請根據關鍵字「${keyword}」，用繁體中文列出5個與此關鍵字相關的搜尋建議，格式用換行分隔，每一行只寫建議詞。`;
+  const prompt = `請幫我列出5個與「${keyword}」相關的繁體中文搜尋建議，每個建議詞一行，請只回覆建議詞，不要其他文字。`;
 
   try {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -27,7 +27,11 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    const text = data.choices?.[0]?.message?.content || '';
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      return res.status(500).json({ error: 'OpenAI response invalid' });
+    }
+
+    const text = data.choices[0].message.content;
 
     const suggestions = text
       .split('\n')
