@@ -1,0 +1,13 @@
+{
+  "functions": {
+    "api/suggestions.js": {
+      "runtime": "nodejs18.x"
+    }
+  },
+  "routes": [
+    {
+      "src": "/api/suggestions",
+      "dest": "/api/suggestions.js"
+    }
+  ]
+}
